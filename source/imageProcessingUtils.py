@@ -112,8 +112,8 @@ class ImageProcessingUtils():
 
 	# Gera o mapa utilizado pelo pathplanning
 	def getImageMap(self, img, goalX, goalY, scale, safeScale):
-		x = 640/scale
-		y = 480/scale
+		x = 1280/scale
+		y = 720/scale
 		goalX = int(goalX/scale)
 		goalY = int(goalY/scale)
 		map = np.zeros((x,y))
@@ -138,7 +138,7 @@ class ImageProcessingUtils():
 			self.goal = (goalX, goalY)
 			self.mapScale = scale
 			self.updateTrajetoria = True
-			mapImg = cv2.resize(mapImg,(640, 480))
+			mapImg = cv2.resize(mapImg,(1280, 720))
 			cv2.imshow("Mapeamento", mapImg)
 		return 1
 

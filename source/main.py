@@ -4,6 +4,7 @@
 ##############################################################################
 #   Author: Paulo Felipe - paulof (at) ufop.edu.br
 from collections import deque
+import os
 from math import atan2, acos, cos, sin, sqrt, pi
 from imutils.video import VideoStream
 from robotController import RobotController
@@ -17,7 +18,6 @@ import sys
 import time
 import rospy
 np.set_printoptions(threshold=sys.maxsize)
-
 class Main():
 
 	# Construtor
@@ -60,6 +60,9 @@ class Main():
 	# Carrega a imagem da camera
 	def loadCameraImage(self):
 		videoSource = cv2.VideoCapture(self.args["video"])
+		videoSource.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+		videoSource.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+		videoSource.set(cv2.CAP_PROP_FPS, 60)
 		#videoSource = cv2.VideoCapture('vid04.mp4')
 		time.sleep(2.0)
 		return videoSource
@@ -80,8 +83,8 @@ class Main():
 	
 	def createRawImage(self):
 		# Definicao do grafico de trajetoria
-		gWidth = 640
-		gHeight = 480
+		gWidth = 1280
+		gHeight = 720
 		graph = np.ones((gHeight,gWidth,3), np.uint8)*255
 		return graph
 
@@ -134,16 +137,22 @@ class Main():
 		
 
 
-
-
+	def generateWebFrame(self, frame):
+		ret, buffer = cv2.imencode('.jpg', frame)
+		frameImg = buffer.tobytes()
+		f = open('cameraImg.jpg', 'wb')
+		f.write(frameImg)
+		f.close()
+		
 	# Loop de reconhcimento
-	def mainLoop(self, videoSource):		
+	def mainLoop(self, videoSource):
 		self.pts = deque(maxlen=self.args["buffer"])
 		while True:		
 			count = 50
 			graph = self.createRawImage()
 			# Pega o frame da camera
 			frame = self.utils.getFrame(videoSource)
+
 			# Altera o espaco para hsv
 			hsv = self.utils.frameToHsv(frame)
 			hsv2 = self.utils.frameToHsv(frame)
@@ -163,14 +172,17 @@ class Main():
 
 			# Manda imprimir os obstaculos
 			self.utils.printWalls(frame,graph, contoursWalls)
+
 			# Reconhece o objeto, buscando o contorno encontrado com maior raio
 			ev3 = Ev3()
 			(ev3.front.x, ev3.front.y) = self.utils.recognizeObject(contoursEv3Front, frame, 'Ev3')
 			(ev3.center.x, ev3.center.y) = self.utils.recognizeObject(contoursOrigem, frame, 'Origem')
+			
 			# Caso ambos os objetos sejam reconhecido, faz o processamento para mostrar a trajetoria
 			if(ev3.front.x != -1 and ev3.center.x != -1):
 				ev3.th = self.getOrientation(ev3)
 				self.utils.printRobot(ev3, frame, graph, 10)
+			
 			#Envia os dados do EV3 para o processador de imagens
 			self.utils.ev3 = ev3
 
@@ -180,12 +192,16 @@ class Main():
 				self.loadPath()
 			elif(self.utils.trajetoria == True and self.running == True):
 				self.runRobot(ev3, graph,frame)
+
 			# Finaliza o programa caso aperte a tecla q
 			if self.utils.printImage(frame, graph) == ord("q"):
 				break
 
+			# Transforma o frame em .jpg para fazer o stream
+			self.generateWebFrame(frame)
 
 if __name__ == '__main__':
 	rospy.init_node('ev3_controlador_py', anonymous=True)
 	cl = Main()
+	
    	 
