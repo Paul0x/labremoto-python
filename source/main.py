@@ -17,6 +17,7 @@ import imutils
 import sys
 import time
 import rospy
+import socket
 np.set_printoptions(threshold=sys.maxsize)
 class Main():
 
@@ -140,13 +141,31 @@ class Main():
 	def generateWebFrame(self, frame):
 		ret, buffer = cv2.imencode('.jpg', frame)
 		frameImg = buffer.tobytes()
-		f = open('cameraImg.jpg', 'wb')
-		f.write(frameImg)
-		f.close()
+		frameSize = sys.getsizeof(frameImg)
 		
+		SEPARATOR = "__"
+		SOCKET_HOST = "127.0.0.1"
+		SOCKET_PORT = 9000
+
+		package = str(frameSize) + SEPARATOR + frameImg
+
+		# Cliente socket - 
+		try:
+			clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			clientSocket.connect((SOCKET_HOST,SOCKET_PORT))
+			print("Agr conectou kkk")
+			
+			clientSocket.send(package)
+			print("Enviou msg!")
+			clientSocket.close()
+		except socket.error, msg:
+			#print("Nao rolou conectar kkk")
+			i = 0
+	
 	# Loop de reconhcimento
 	def mainLoop(self, videoSource):
 		self.pts = deque(maxlen=self.args["buffer"])
+
 		while True:		
 			count = 50
 			graph = self.createRawImage()

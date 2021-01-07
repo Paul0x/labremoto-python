@@ -9,7 +9,7 @@ import cv2
 import imutils
 import sys
 import time
-
+import socket
 
 app = Flask(__name__)
 @app.route('/')
@@ -18,24 +18,21 @@ def index():
 
 @app.route('/video_record')
 def video_record():	
+	generate()
 	return Response(generate(),mimetype = "multipart/x-mixed-replace; boundary=frame")
 
 def generate():
-	camera = cv2.VideoCapture("/dev/video1")
-#	while True:
-#		success, frame = camera.read()  # read the camera frame
-#		if not success:
-#			break
-#		else:
-#			ret, buffer = cv2.imencode('.jpg', frame)
-#			frame = buffer.tobytes()
-#			yield (b'--frame\r\n'
-#					b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
+	serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	SOCKET_HOST = "127.0.0.1"
+	SOCKET_PORT = 9000
+	
+	serverSocket.bind((SOCKET_HOST,SOCKET_PORT))
+	serverSocket.listen(0)
+	
 	while True:
-		file = open("cameraImg.jpg", "rb")
-		imgBytes = file.read();
-        yield (b'--frame\r\n'
-					b'Content-Type: image/jpeg\r\n\r\n' + imgBytes + b'\r\n')
+		(clientConnected, clientAddress) = serverSocket.accept()
+		dataFromClient = clientConnected.recv(1024)
+		print(dataFromClient)
 
 if __name__ == '__main__':
 	app.run(debug=True, threaded=True)
