@@ -3,8 +3,32 @@
         <div class="row">
             <div class="col-lg-8  offset-lg-2">
                 <h3 class="mt-5">Live Streaming</h3>
-                <img src="{{ url_for('video_record') }}" width="100%">
+                <img id="img" src="/static/imgVideo.jpg" width="100%">
             </div>
         </div>
     </div>
-    </body>
+</body>
+
+<script>
+    function refresh(node) {
+        var times = 60; // gap in Milli Seconds;
+
+        (function startRefresh() {
+            var address;
+            if (node.src.indexOf('?') > -1)
+                address = node.src.split('?')[0];
+            else
+                address = node.src;
+            node.src = address + "?time=" + new Date().getTime();
+
+            setTimeout(startRefresh, times);
+        })();
+
+    }
+
+    window.onload = function () {
+        var node = document.getElementById('img');
+        refresh(node);
+        // you can refresh as many images you want just repeat above steps
+    }
+</script>

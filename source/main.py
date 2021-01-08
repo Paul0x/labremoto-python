@@ -62,8 +62,8 @@ class Main():
 	# Carrega a imagem da camera
 	def loadCameraImage(self):
 		videoSource = cv2.VideoCapture(self.args["video"])
-		videoSource.set(cv2.CAP_PROP_FRAME_WIDTH, 480)
-		videoSource.set(cv2.CAP_PROP_FRAME_HEIGHT, 320)
+		videoSource.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+		videoSource.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 		videoSource.set(cv2.CAP_PROP_FPS, 25)
 		#videoSource = cv2.VideoCapture('vid04.mp4')
 		time.sleep(2.0)
@@ -139,27 +139,13 @@ class Main():
 		
 
 
-	def generateWebFrame(self, frame, clientSocket):
+	def generateWebFrame(self, frame):
 		ret, buffer = cv2.imencode('.jpg', frame)
 		frameImg = buffer.tobytes()
 		#frameSize = sys.getsizeof(frameImg)
+		file = open("static/imgVideo.jpg", "wb")
+		file.write(frameImg)
 		
-		SEPARATOR = "__"
-		BUFFER_SIZE = 4096
-		
-		package = io.BytesIO(frameImg)
-		# Cliente socket - 
-		try:
-
-			sendData = package.read(4096)
-			while sendData:
-				clientSocket.sendall(sendData)
-				sendData = package.read(4096)
-			clientSocket.sendall("/eof")
-		except socket.error, msg:
-			print(msg)
-			i = 0
-	
 	# Loop de reconhcimento
 	def mainLoop(self, videoSource):
 		self.pts = deque(maxlen=self.args["buffer"])
@@ -167,13 +153,6 @@ class Main():
 		SOCKET_PORT = 9000
 		socketConnected = 0
 
-		while (socketConnected == 0):
-			try:
-				clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				clientSocket.connect((SOCKET_HOST,SOCKET_PORT))
-				socketConnected = 1
-			except socket.error, msg:
-				print("Aguardando socket")
 		while True:		
 			count = 50
 			graph = self.createRawImage()
@@ -225,7 +204,7 @@ class Main():
 				break
 
 			# Transforma o frame em .jpg para fazer o stream
-			self.generateWebFrame(frame, clientSocket)
+			self.generateWebFrame(frame)
 
 if __name__ == '__main__':
 	rospy.init_node('ev3_controlador_py', anonymous=True)
