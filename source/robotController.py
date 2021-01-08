@@ -80,7 +80,7 @@ class RobotController():
 
         # Verifica a condicao de parada
         if(abs(rho) < err):
-            return True, (pose.x,pose.y,goal.x,goal.y,linearVelocity,angularVelocity)
+            return True, ()
 
         # Define velocidade linear
         if(lastFlag == True):

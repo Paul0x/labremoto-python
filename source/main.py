@@ -51,6 +51,8 @@ class Main():
 		#Terceiro range HSV - Walls (Obstaculos)
 		self.wallsLower = (70, 50, 50)
 		self.wallsUpper = (100, 255, 255)
+
+		self.ev3telemetry = ()
 	
 	# Carrega os argumentos do console
 	def loadArgs(self):
@@ -122,7 +124,9 @@ class Main():
 		pose = Point()
 		pose.x = ev3.center.x
 		pose.y = ev3.center.y
-		if(self.robotController.pidRun(graph, self.currentGoal, pose, ev3, False) == True):
+		pidResp, ev3telemetry = self.robotController.pidRun(graph, self.currentGoal, pose, ev3, False)
+		self.ev3telemetry = ev3telemetry
+		if(pidResp == True):
 			if(len(self.path) == 0):
 				self.running = False
 				self.robotController.stopRobot()
