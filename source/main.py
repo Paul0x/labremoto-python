@@ -145,6 +145,9 @@ class Main():
 		#frameSize = sys.getsizeof(frameImg)
 		file = open("static/imgVideo.jpg", "wb")
 		file.write(frameImg)
+
+	def generateWebEv3Data(self, ev3):
+		i = 0
 		
 	# Loop de reconhcimento
 	def mainLoop(self, videoSource):
@@ -205,6 +208,9 @@ class Main():
 
 			# Transforma o frame em .jpg para fazer o stream
 			self.generateWebFrame(frame)
+
+			# Imprime as variaveis do ev3
+			
 
 if __name__ == '__main__':
 	rospy.init_node('ev3_controlador_py', anonymous=True)

@@ -80,7 +80,7 @@ class RobotController():
 
         # Verifica a condicao de parada
         if(abs(rho) < err):
-            return True
+            return True, (pose.x,pose.y,goal.x,goal.y,linearVelocity,angularVelocity)
 
         # Define velocidade linear
         if(lastFlag == True):
@@ -105,7 +105,7 @@ class RobotController():
         twist.angular.y = 0
         twist.angular.z = angularVelocity
         pub.publish(twist)
-        return False
+        return False, (pose.x,pose.y,goal.x,goal.y,linearVelocity,angularVelocity)
             
 
 
