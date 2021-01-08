@@ -31,15 +31,20 @@ def generate():
 	serverSocket.bind((SOCKET_HOST,SOCKET_PORT))
 	serverSocket.listen(0)
 	(clientConnected, clientAddress) = serverSocket.accept()
-	RecvData = clientConnected.recv(1024)
-	img = io.BytesIO("")		
-	while RecvData:
-		dataFromClient = clientConnected.recv(1024)
-		img.write(dataFromClient)
-	serverSocket.close()
-	yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + img + b'\r\n')
+	img = io.BytesIO()
+	while True:
+		dataFromClient = clientConnected.recv(4096)
+		if dataFromClient != "/eof":
+			img.write(b''+dataFromClient)
+		if dataFromClient == "/eof":
+			serverSocket.close()
+			imgStr = img.getvalue()
+			img = io.BytesIO()
+			time.sleep(.5)
+			yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + imgStr + b'\r\n')
 
+	
 
 if __name__ == '__main__':
 	app.run(debug=True, threaded=True)
