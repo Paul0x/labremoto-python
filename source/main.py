@@ -13,6 +13,7 @@ import argparse
 from imageProcessingUtils import ImageProcessingUtils
 from ev3 import Ev3, Point
 import cv2
+import io
 import imutils
 import sys
 import time
@@ -141,25 +142,33 @@ class Main():
 	def generateWebFrame(self, frame):
 		ret, buffer = cv2.imencode('.jpg', frame)
 		frameImg = buffer.tobytes()
-		frameSize = sys.getsizeof(frameImg)
+		#frameSize = sys.getsizeof(frameImg)
 		
 		SEPARATOR = "__"
+		BUFFER_SIZE = 4096
 		SOCKET_HOST = "127.0.0.1"
 		SOCKET_PORT = 9000
 
-		package = str(frameSize) + SEPARATOR + frameImg
+		print("Gerando pacote")
+		package = io.BytesIO(frameImg)
 
+		print("Pacote gerado")
 		# Cliente socket - 
 		try:
+
+			print("Conectando socket")
 			clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			clientSocket.connect((SOCKET_HOST,SOCKET_PORT))
 			print("Agr conectou kkk")
-			
-			clientSocket.send(package)
-			print("Enviou msg!")
+
+			sendData = package.read(1024)
+			while sendData:
+				clientSocket.send(sendData)
+				sendData = package.read(1024)
+			print("Agr desconectou")
 			clientSocket.close()
 		except socket.error, msg:
-			#print("Nao rolou conectar kkk")
+			print(msg)
 			i = 0
 	
 	# Loop de reconhcimento
