@@ -19,6 +19,8 @@ import sys
 import time
 import rospy
 import socket
+import json
+
 np.set_printoptions(threshold=sys.maxsize)
 class Main():
 
@@ -141,17 +143,40 @@ class Main():
 		for point in self.path:
 			cv2.circle(frame, (int(point[0]), int(point[1])), 2, (0, 0, 0), -1)
 		
+		# Imprime arquivo JSON
+		self.generateWebEv3Data()
 
-
-	def generateWebFrame(self, frame):
+	#
+	# Funcao para gerar uma imagem jpg - utilizada para o servidor web
+	#
+	def generateWebFrame(self, frame, graph):
 		ret, buffer = cv2.imencode('.jpg', frame)
 		frameImg = buffer.tobytes()
-		#frameSize = sys.getsizeof(frameImg)
 		file = open("static/imgVideo.jpg", "wb")
 		file.write(frameImg)
 
-	def generateWebEv3Data(self, ev3):
-		i = 0
+
+		ret, buffer = cv2.imencode('.jpg', graph)
+		frameImg = buffer.tobytes()
+		file = open("static/imgGraph.jpg", "wb")
+		file.write(frameImg)
+
+	#
+	#	Geracao do arquivo JSON para consumo do servidor WEB
+	#
+	def generateWebEv3Data(self):
+		data = {}
+		if self.ev3telemetry == ():
+			return
+		print(self.ev3telemetry)
+		data['currentPosX'] = self.ev3telemetry[0]
+		data['currentPosY'] = self.ev3telemetry[1]
+		data['goalPosX'] = self.ev3telemetry[2]
+		data['goalPosY'] = self.ev3telemetry[3]
+		data['linearVel'] = self.ev3telemetry[4]
+		data['angularVel'] = self.ev3telemetry[5]
+		with open("static/ev3data.json", "w") as outputfile:
+			json.dump(data, outputfile)
 		
 	# Loop de reconhcimento
 	def mainLoop(self, videoSource):
@@ -211,10 +236,8 @@ class Main():
 				break
 
 			# Transforma o frame em .jpg para fazer o stream
-			self.generateWebFrame(frame)
+			self.generateWebFrame(frame, graph)
 
-			# Imprime as variaveis do ev3
-			
 
 if __name__ == '__main__':
 	rospy.init_node('ev3_controlador_py', anonymous=True)
