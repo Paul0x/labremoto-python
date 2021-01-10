@@ -27,15 +27,18 @@ import sys
 import time
 import rospy
 import json
+from datetime import datetime
 
 np.set_printoptions(threshold=sys.maxsize)
 class Main():
 
 	# Construtor
 	def __init__(self):
+			now = datetime.now()
 			print("Laboratorio Remoto de Robotica Movel")
 			print("Trabalho de Conclusao de Curso")
 			print("Paulo Felipe Possa Parreira")
+			print now.strftime("%d/%m/%Y %h/%m")
 			print("======================================")
 			print("Inicializando...")
 			self.utils = ImageProcessingUtils()
