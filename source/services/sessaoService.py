@@ -37,3 +37,10 @@ class SessaoService:
         self.sessaoAtiva = Sessao(sessoes[0])
         print("Sessao ativa carregada")
 
+    # Pega os experimentos da sessao ativa
+    def getExperimentosSessaoAtiva(self):
+        if self.sessaoAtiva is None:
+            return
+        experimentos = self.db.getExperimentosSessaoAtiva(self.sessaoAtiva.id)
+        self.experimentosSessaoAtiva = experimentos
+        return self.experimentosSessaoAtiva

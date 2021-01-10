@@ -32,3 +32,11 @@ class Database():
         cursor = self.conn.cursor()
         cursor.execute(queryString)
         self.conn.commit()
+
+    def getExperimentosSessaoAtiva(self, codSessaoAtiva):
+        queryString = "SELECT * FROM sessao_experimento WHERE cod_sessao = %s"
+        cursor = self.conn.cursor()
+        cursor.execute(queryString, (codSessaoAtiva, ))
+        results = cursor.fetchall()
+        print(results)
+        return results
