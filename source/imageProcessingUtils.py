@@ -54,10 +54,10 @@ class ImageProcessingUtils():
 	def printImage(self, frame, graph):
 		cv2.namedWindow("Robotica")
 		cv2.setMouseCallback("Robotica", self.cvEventHandler)
-		#cv2.imshow("Trajetoria", graph)
+		cv2.imshow("Trajetoria", graph)
 		self.frame = frame
 		self.graph = graph
-		#cv2.imshow("Robotica", frame)
+		cv2.imshow("Robotica", frame)
 		return cv2.waitKey(1) & 0xFF
 
 	# Adiciona o espaco de seguranca no mapa
