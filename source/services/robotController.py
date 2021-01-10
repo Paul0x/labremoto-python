@@ -7,7 +7,7 @@ import math
 from math import atan2, acos, cos, sin, sqrt, pi
 import cv2
 from geometry_msgs.msg import Twist
-from ev3 import Ev3, Point
+from entities.ev3 import Ev3, Point
 from nav_msgs.msg import Odometry
 import sys, select, termios, tty
 

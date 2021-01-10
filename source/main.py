@@ -1,24 +1,31 @@
 ##############################################################################
-#   Reconhecimento e Processamento de Imagens @ Trabalho de Robotica 2019.1
+#   Laboratorio Remoto de Robotica Movel - TCC
 #   Arquivo Principal
 ##############################################################################
 #   Author: Paulo Felipe - paulof (at) ufop.edu.br
+#
+##############################################################################
+#  Contem o loop principal para controlar o robo.
+#
+#
 from collections import deque
 import os
 from math import atan2, acos, cos, sin, sqrt, pi
 from imutils.video import VideoStream
-from robotController import RobotController
+from services.robotController import RobotController
+from services.sessaoService import SessaoService
+from datetime import datetime, timedelta
 import numpy as np
 import argparse
-from imageProcessingUtils import ImageProcessingUtils
-from ev3 import Ev3, Point
+from utils.imageProcessingUtils import ImageProcessingUtils
+from entities.ev3 import Ev3, Point
+from services.database import Database
 import cv2
 import io
 import imutils
 import sys
 import time
 import rospy
-import socket
 import json
 
 np.set_printoptions(threshold=sys.maxsize)
@@ -26,7 +33,11 @@ class Main():
 
 	# Construtor
 	def __init__(self):
-		#try:
+			print("Laboratorio Remoto de Robotica Movel")
+			print("Trabalho de Conclusao de Curso")
+			print("Paulo Felipe Possa Parreira")
+			print("======================================")
+			print("Inicializando...")
 			self.utils = ImageProcessingUtils()
 			self.utils.init()
 			self.robotController = RobotController()
@@ -35,13 +46,16 @@ class Main():
 			videoSource = self.loadCameraImage()
 			self.loadParams()
 			self.running = False
+			self.initDatabase()
+			self.sessaoService = SessaoService(self.db)
+			self.sessaoService.getSessaoAtiva()
+			self.sessaoService.checkSessaoTimeout()
+			print("Inicializado com sucesso.")
 			self.mainLoop(videoSource)
-		#except:
-		#	print('Reboot')
-		#	self.__init__()
 
 	# Carrega os argumentos
 	def loadParams(self):
+		print("Carregando parametros do Ev3")
 		#Primeiro range HSV - Origem
 		self.origemLower = (97, 170, 170)
 		self.origemUpper = (125, 255, 255)
@@ -55,23 +69,35 @@ class Main():
 		self.wallsUpper = (100, 255, 255)
 
 		self.ev3telemetry = ()
+		print("Parametros do Ev3 carregados.")
 	
 	# Carrega os argumentos do console
 	def loadArgs(self):
+		print("Carregando argumentos do script...")
 		ap = argparse.ArgumentParser()
 		ap.add_argument("-v", "--video", help="path to the (optional) video file")
 		ap.add_argument("-b", "--buffer", type=int, default=2, help="max buffer size")
 		self.args = vars(ap.parse_args())
+		print("Argumentos do script carregados.")
 	
 	# Carrega a imagem da camera
 	def loadCameraImage(self):
+		print("Carregando imagem da camera")
 		videoSource = cv2.VideoCapture(self.args["video"])
 		videoSource.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 		videoSource.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 		videoSource.set(cv2.CAP_PROP_FPS, 25)
 		#videoSource = cv2.VideoCapture('vid04.mp4')
 		time.sleep(2.0)
+		print("Imagem da camera carregada.")
 		return videoSource
+
+	# Inicializa a classe do banco de dados
+	def initDatabase(self):
+		print("Inicializando conexao com o banco de dados")
+		self.db = Database()
+		self.db.initDatabase()
+		print("Conexao estalecida.")
 
 	# Realiza o calculo do angulo do ev3 com relacao ao seu centro
 	def getOrientation(self, ev3):
@@ -181,9 +207,7 @@ class Main():
 	# Loop de reconhcimento
 	def mainLoop(self, videoSource):
 		self.pts = deque(maxlen=self.args["buffer"])
-		SOCKET_HOST = "127.0.0.1"
-		SOCKET_PORT = 9000
-		socketConnected = 0
+
 
 		while True:		
 			count = 50
