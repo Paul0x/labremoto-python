@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 11, 2021 at 09:24 AM
+-- Generation Time: Jan 11, 2021 at 01:10 PM
 -- Server version: 5.7.21-1ubuntu1
 -- PHP Version: 7.2.3-1ubuntu1
 
@@ -78,17 +78,18 @@ INSERT INTO `configuracoes` (`id`, `label`, `valor`) VALUES
 
 CREATE TABLE `experimento` (
   `codigo` int(11) NOT NULL,
-  `label` varchar(100) NOT NULL
+  `label` varchar(100) NOT NULL,
+  `descricao` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `experimento`
 --
 
-INSERT INTO `experimento` (`codigo`, `label`) VALUES
-(1, 'Apontar Objetivo'),
-(2, 'Instruções de Trajetória'),
-(3, 'Trajetórias Pré-Definidas');
+INSERT INTO `experimento` (`codigo`, `label`, `descricao`) VALUES
+(1, 'Apontar Objetivo', ''),
+(2, 'Instruções de Trajetória', ''),
+(3, 'Trajetórias Pré-Definidas', '');
 
 -- --------------------------------------------------------
 
@@ -195,15 +196,16 @@ CREATE TABLE `sessao_experimento` (
   `cod_sessao` int(11) NOT NULL,
   `cod_experimento` int(11) NOT NULL,
   `parametros` text NOT NULL,
-  `dt_inicio` datetime NOT NULL
+  `dt_inicio` datetime NOT NULL,
+  `ativo` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `sessao_experimento`
 --
 
-INSERT INTO `sessao_experimento` (`codigo`, `cod_sessao`, `cod_experimento`, `parametros`, `dt_inicio`) VALUES
-(1, 14, 1, 'a', '2021-01-10 16:43:00');
+INSERT INTO `sessao_experimento` (`codigo`, `cod_sessao`, `cod_experimento`, `parametros`, `dt_inicio`, `ativo`) VALUES
+(1, 14, 1, 'a', '2021-01-10 16:43:00', 0);
 
 -- --------------------------------------------------------
 
