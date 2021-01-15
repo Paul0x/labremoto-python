@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 11, 2021 at 01:10 PM
+-- Generation Time: Jan 15, 2021 at 09:45 AM
 -- Server version: 5.7.21-1ubuntu1
 -- PHP Version: 7.2.3-1ubuntu1
 
@@ -78,7 +78,7 @@ INSERT INTO `configuracoes` (`id`, `label`, `valor`) VALUES
 
 CREATE TABLE `experimento` (
   `codigo` int(11) NOT NULL,
-  `label` varchar(100) NOT NULL,
+  `label` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `descricao` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -87,9 +87,9 @@ CREATE TABLE `experimento` (
 --
 
 INSERT INTO `experimento` (`codigo`, `label`, `descricao`) VALUES
-(1, 'Apontar Objetivo', ''),
-(2, 'Instruções de Trajetória', ''),
-(3, 'Trajetórias Pré-Definidas', '');
+(1, 'Apontar Objetivo', 'Aponte um ponto na imagem da câmera e o robô fará o deslocamento até o objetivo de forma autônoma. Escolha o algoritmo de buscas, parâmetros do controlador, controle de obstáculos e parâmetros do espaço de busca. Receba os parâmetros do robô no tempo como resultado.'),
+(2, 'Instruções de Trajetória', 'Insira instruções (velocidade linear e ângulo de giro) no tempo para que o robô realize o percurso. Personalize os parâmetros do PID e identificação dos obstáculos. Receba os parâmetros do robô no tempo como resultado.'),
+(3, 'Trajetórias Pré-Definidas', 'Insira trajetórias pré-definidas, ex: formas geométricas, para que o robô as complete.');
 
 -- --------------------------------------------------------
 
@@ -98,16 +98,15 @@ INSERT INTO `experimento` (`codigo`, `label`, `descricao`) VALUES
 --
 
 CREATE TABLE `experimento_apontar_parametros` (
-  `codigo` int(11) NOT NULL,
   `cod_sessao_experimento` int(11) NOT NULL,
-  `algoritimo_busca` int(11) NOT NULL,
+  `algoritmo_busca` int(11) NOT NULL,
   `obstaculos` tinyint(1) NOT NULL,
-  `pk` float NOT NULL,
-  `pd` float NOT NULL,
-  `pi` float NOT NULL,
+  `kp` float NOT NULL,
+  `kd` float NOT NULL,
+  `ki` float NOT NULL,
   `tamanho_mapa_busca` int(11) NOT NULL,
   `tamanho_area_seguranca` int(11) NOT NULL,
-  `dt_criacacao` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `dt_criacao` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -138,8 +137,8 @@ CREATE TABLE `experimento_resultados` (
 CREATE TABLE `experimento_trajetoria_instrucoes` (
   `codigo` int(11) NOT NULL,
   `cod_sessao_experimento` int(11) NOT NULL,
-  `velocidade_linear` decimal(2,2) NOT NULL,
-  `angulo_rotacao` decimal(3,2) NOT NULL,
+  `velocidade_linear` decimal(5,2) NOT NULL,
+  `velocidade_angular` decimal(5,2) NOT NULL,
   `timer` int(11) NOT NULL,
   `dt_criacao` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `dt_inicializacao` timestamp NULL DEFAULT NULL,
@@ -153,9 +152,8 @@ CREATE TABLE `experimento_trajetoria_instrucoes` (
 --
 
 CREATE TABLE `experimento_trajetoria_parametros` (
-  `codigo` int(11) NOT NULL,
   `cod_sessao_experimento` int(11) NOT NULL,
-  `obstaculo` tinyint(1) NOT NULL,
+  `obstaculos` tinyint(1) NOT NULL,
   `kp` float NOT NULL,
   `kd` float NOT NULL,
   `ki` float NOT NULL,
@@ -176,15 +174,6 @@ CREATE TABLE `sessao` (
   `dt_fim` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
---
--- Dumping data for table `sessao`
---
-
-INSERT INTO `sessao` (`codigo`, `matricula`, `ativo`, `dt_inicio`, `dt_fim`) VALUES
-(12, '12.2.1165', 0, '2021-01-06 19:31:28', '2021-01-06 19:56:28'),
-(13, '12.2.1165', 0, '2021-01-10 16:04:50', '2021-01-10 16:29:50'),
-(14, '12.2.1165', 1, '2021-01-10 16:39:47', '2021-01-10 17:04:47');
-
 -- --------------------------------------------------------
 
 --
@@ -199,13 +188,6 @@ CREATE TABLE `sessao_experimento` (
   `dt_inicio` datetime NOT NULL,
   `ativo` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `sessao_experimento`
---
-
-INSERT INTO `sessao_experimento` (`codigo`, `cod_sessao`, `cod_experimento`, `parametros`, `dt_inicio`, `ativo`) VALUES
-(1, 14, 1, 'a', '2021-01-10 16:43:00', 0);
 
 -- --------------------------------------------------------
 
@@ -262,8 +244,7 @@ ALTER TABLE `experimento`
 -- Indexes for table `experimento_apontar_parametros`
 --
 ALTER TABLE `experimento_apontar_parametros`
-  ADD PRIMARY KEY (`codigo`),
-  ADD KEY `pk1_experimento_apontar_parametros` (`cod_sessao_experimento`);
+  ADD PRIMARY KEY (`cod_sessao_experimento`);
 
 --
 -- Indexes for table `experimento_resultados`
@@ -283,8 +264,7 @@ ALTER TABLE `experimento_trajetoria_instrucoes`
 -- Indexes for table `experimento_trajetoria_parametros`
 --
 ALTER TABLE `experimento_trajetoria_parametros`
-  ADD PRIMARY KEY (`codigo`),
-  ADD KEY `pk1_experimento_trajetoria_parametros` (`cod_sessao_experimento`);
+  ADD PRIMARY KEY (`cod_sessao_experimento`);
 
 --
 -- Indexes for table `sessao`
@@ -332,11 +312,6 @@ ALTER TABLE `configuracoes`
 ALTER TABLE `experimento`
   MODIFY `codigo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 --
--- AUTO_INCREMENT for table `experimento_apontar_parametros`
---
-ALTER TABLE `experimento_apontar_parametros`
-  MODIFY `codigo` int(11) NOT NULL AUTO_INCREMENT;
---
 -- AUTO_INCREMENT for table `experimento_resultados`
 --
 ALTER TABLE `experimento_resultados`
@@ -347,20 +322,15 @@ ALTER TABLE `experimento_resultados`
 ALTER TABLE `experimento_trajetoria_instrucoes`
   MODIFY `codigo` int(11) NOT NULL AUTO_INCREMENT;
 --
--- AUTO_INCREMENT for table `experimento_trajetoria_parametros`
---
-ALTER TABLE `experimento_trajetoria_parametros`
-  MODIFY `codigo` int(11) NOT NULL AUTO_INCREMENT;
---
 -- AUTO_INCREMENT for table `sessao`
 --
 ALTER TABLE `sessao`
-  MODIFY `codigo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `codigo` int(11) NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT for table `sessao_experimento`
 --
 ALTER TABLE `sessao_experimento`
-  MODIFY `codigo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `codigo` int(11) NOT NULL AUTO_INCREMENT;
 --
 -- Constraints for dumped tables
 --
