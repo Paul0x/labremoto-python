@@ -9,7 +9,7 @@
     
         <!-- load the controllers -->
         <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
-              output="screen" args="OutPortState OutPortA diffDrv">
+              output="screen" args="OutPortState OutPortA OutPortB diffDrv">
         </node>
         <node name="cmd_vel_relay" pkg="topic_tools" type="relay" args="/cmd_vel /ev3dev/diffDrv/cmd_vel" />
         <node name="odom_relay" pkg="topic_tools" type="relay" args="/ev3dev/diffDrv/odom /odom" />
