@@ -19,6 +19,7 @@ import numpy as np
 import argparse
 from utils.imageProcessingUtils import ImageProcessingUtils
 from entities.ev3 import Ev3, Point
+from entities.experimento import SessaoExperimento, SessaoExperimentoApontarParametros
 from services.database import Database
 import cv2
 import io
@@ -51,10 +52,10 @@ class Main():
 			self.running = False
 			self.initDatabase()
 			self.sessaoService = SessaoService(self.db)
-			self.sessaoService.getSessaoAtiva()
+			self.sessaoAtiva = self.sessaoService.getSessaoAtiva()
 			self.sessaoService.getExperimentosSessaoAtiva()
 			self.sessaoService.checkSessaoTimeout()
-			print("Inicializado com sucesso.")
+			print("Inicializado com sucesso.\n\n")
 			self.mainLoop(videoSource)
 
 	# Carrega os argumentos
@@ -214,7 +215,9 @@ class Main():
 
 
 		while True:		
-			count = 50
+
+			####### INICIO DA PARTE DE PROCESSAMENTO DE IMAGENS DO LOOP
+			
 			graph = self.createRawImage()
 			# Pega o frame da camera
 			frame = self.utils.getFrame(videoSource)
@@ -244,7 +247,7 @@ class Main():
 			(ev3.front.x, ev3.front.y) = self.utils.recognizeObject(contoursEv3Front, frame, 'Ev3')
 			(ev3.center.x, ev3.center.y) = self.utils.recognizeObject(contoursOrigem, frame, 'Origem')
 			
-			# Caso ambos os objetos sejam reconhecido, faz o processamento para mostrar a trajetoria
+			# Caso ambos os objetos sejam reconhecido, faz o processamento para mostrar o robo na tela
 			if(ev3.front.x != -1 and ev3.center.x != -1):
 				ev3.th = self.getOrientation(ev3)
 				self.utils.printRobot(ev3, frame, graph, 10)
@@ -252,12 +255,41 @@ class Main():
 			#Envia os dados do EV3 para o processador de imagens
 			self.utils.ev3 = ev3
 
+			################ FIM DA PARTE DE PROCESSAMENTO DE IMAGENS DO LOOP
+			################ INICIO DA PARTE DE CONTROLE DO LOOP
+			#
+			#
+			#
+			#
+
+			# 1a Etapa - Verifica se o sistema pede para executar o experimento e o robo esta disponivel
+			print("\nBuscando sinal de inicio e sessao ativa...")
+			time.sleep(.5)
+			if (self.db.getRodarExperimentoStatus() == 1 and self.running == False and self.sessaoAtiva is not None):
+				print("Buscando experimento para rodar...\n[ Sessao: " + str(self.sessaoAtiva.id) + " ]\n")
+				time.sleep(.5)
+				# Busca o experimento ativo
+				experimentoAtivo = self.db.getExperimentoAtivo(self.sessaoAtiva.id)
+				if(experimentoAtivo != None):
+					if (int(experimentoAtivo.codExperimento) == 1) :
+						experimentoAtivo.parametros = self.db.getParametrosExperimentoApontar(experimentoAtivo.codigo)
+						print("Experimento encontrado!")
+						print(experimentoAtivo)
+
+				
+
 			# Checa se existe trajetoria atual 
 			if(self.utils.updateTrajetoria == True or (self.utils.trajetoria == True and self.running == False)):
 				self.utils.updateTrajetoria = False
 				self.loadPath()
 			elif(self.utils.trajetoria == True and self.running == True):
 				self.runRobot(ev3, graph,frame)
+
+			################ FIM DA PARTE DE CONTROLE DO LOOP
+			#
+			#
+			#
+			#
 
 			# Finaliza o programa caso aperte a tecla q
 			if self.utils.printImage(frame, graph) == ord("q"):

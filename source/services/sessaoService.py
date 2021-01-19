@@ -36,6 +36,7 @@ class SessaoService:
             return
         self.sessaoAtiva = Sessao(sessoes[0])
         print("Sessao ativa carregada")
+        return self.sessaoAtiva
 
     # Pega os experimentos da sessao ativa
     def getExperimentosSessaoAtiva(self):
