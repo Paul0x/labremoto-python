@@ -139,11 +139,15 @@ class Main():
 		self.currentGoal.y = self.path[0][1]
 		self.path.pop(0)
 
+		print("Iniciando script de movimentacao do robo")
 		self.running = True
 
 	def buildRealPath(self, path, scale):
 		pathLen = len(path)
-		newPathLen = int(pathLen/10)
+		if (pathLen > 10):
+			newPathLen = int(pathLen/10)
+		else:
+			newPathLen = pathLen
 		counter = 0
 		newPath = []
 		for i in range(0, len(path), newPathLen):
@@ -263,8 +267,6 @@ class Main():
 			#
 
 			# 1a Etapa - Verifica se o sistema pede para executar o experimento e o robo esta disponivel
-			print("\nBuscando sinal de inicio e sessao ativa...")
-			time.sleep(.5)
 			if (self.db.getRodarExperimentoStatus() == 1 and self.running == False and self.sessaoAtiva is not None):
 				print("Buscando experimento para rodar...\n[ Sessao: " + str(self.sessaoAtiva.id) + " ]\n")
 				time.sleep(.5)
@@ -274,14 +276,11 @@ class Main():
 					if (int(experimentoAtivo.codExperimento) == 1) :
 						experimentoAtivo.parametros = self.db.getParametrosExperimentoApontar(experimentoAtivo.codigo)
 						print("Experimento encontrado!")
-						print(experimentoAtivo)
+						if hasattr(self.utils, "graph"):
+							self.utils.getImageMap(self.utils.graph,experimentoAtivo.parametros.objetivoX, experimentoAtivo.parametros.objetivoY, 4, 3)
+							print(self.utils.path)
+							self.loadPath()
 
-				
-
-			# Checa se existe trajetoria atual 
-			if(self.utils.updateTrajetoria == True or (self.utils.trajetoria == True and self.running == False)):
-				self.utils.updateTrajetoria = False
-				self.loadPath()
 			elif(self.utils.trajetoria == True and self.running == True):
 				self.runRobot(ev3, graph,frame)
 
