@@ -53,12 +53,10 @@ class Main():
 			self.initDatabase()
 			self.sessaoService = SessaoService(self.db)
 			self.sessaoAtiva = self.sessaoService.getSessaoAtiva()
-			self.sessaoService.getExperimentosSessaoAtiva()
-			self.sessaoService.checkSessaoTimeout()
 			print("Inicializado com sucesso.\n\n")
 			self.mainLoop(videoSource)
 
-	# Carrega os argumentos
+	# Carrega os argumentos do ev3
 	def loadParams(self):
 		print("Carregando parametros do Ev3")
 		#Primeiro range HSV - Origem
@@ -73,6 +71,7 @@ class Main():
 		self.wallsLower = (70, 50, 50)
 		self.wallsUpper = (100, 255, 255)
 
+		# Carrega a saida da telemetria
 		self.ev3telemetry = ()
 		print("Parametros do Ev3 carregados.")
 	
@@ -88,11 +87,12 @@ class Main():
 	# Carrega a imagem da camera
 	def loadCameraImage(self):
 		print("Carregando imagem da camera")
+
+		# Parametros da camera
 		videoSource = cv2.VideoCapture(self.args["video"])
 		videoSource.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 		videoSource.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 		videoSource.set(cv2.CAP_PROP_FPS, 25)
-		#videoSource = cv2.VideoCapture('vid04.mp4')
 		time.sleep(2.0)
 		print("Imagem da camera carregada.")
 		return videoSource
@@ -139,9 +139,6 @@ class Main():
 		self.currentGoal.y = self.path[0][1]
 		self.path.pop(0)
 
-		print("Iniciando script de movimentacao do robo")
-		self.running = True
-
 	def buildRealPath(self, path, scale):
 		pathLen = len(path)
 		if (pathLen > 10):
@@ -157,6 +154,7 @@ class Main():
 		return newPath
 
 
+	# Funcao para fazer o robo funcionar de fato
 	def runRobot(self, ev3, graph, frame):
 		pose = Point()
 		pose.x = ev3.center.x
@@ -210,18 +208,15 @@ class Main():
 		data['goalPosY'] = self.ev3telemetry[3]
 		data['linearVel'] = self.ev3telemetry[4]
 		data['angularVel'] = self.ev3telemetry[5]
+		if (self.running == True):
+			data['running'] = 1
+		else:
+			data['running'] = 0
 		with open("static/ev3data.json", "w") as outputfile:
 			json.dump(data, outputfile)
-		
-	# Loop de reconhcimento
-	def mainLoop(self, videoSource):
-		self.pts = deque(maxlen=self.args["buffer"])
 
-
-		while True:		
-
-			####### INICIO DA PARTE DE PROCESSAMENTO DE IMAGENS DO LOOP
-			
+	# Processamento da imagem para mostrar na camera
+	def processaImagemCamera(self, videoSource):
 			graph = self.createRawImage()
 			# Pega o frame da camera
 			frame = self.utils.getFrame(videoSource)
@@ -259,38 +254,76 @@ class Main():
 			#Envia os dados do EV3 para o processador de imagens
 			self.utils.ev3 = ev3
 
-			################ FIM DA PARTE DE PROCESSAMENTO DE IMAGENS DO LOOP
-			################ INICIO DA PARTE DE CONTROLE DO LOOP
-			#
-			#
-			#
-			#
+			return frame, graph, ev3
 
-			# 1a Etapa - Verifica se o sistema pede para executar o experimento e o robo esta disponivel
-			if (self.db.getRodarExperimentoStatus() == 1 and self.running == False and self.sessaoAtiva is not None):
-				print("Buscando experimento para rodar...\n[ Sessao: " + str(self.sessaoAtiva.id) + " ]\n")
-				time.sleep(.5)
-				# Busca o experimento ativo
-				experimentoAtivo = self.db.getExperimentoAtivo(self.sessaoAtiva.id)
-				if(experimentoAtivo != None):
-					if (int(experimentoAtivo.codExperimento) == 1) :
-						experimentoAtivo.parametros = self.db.getParametrosExperimentoApontar(experimentoAtivo.codigo)
-						print("Experimento encontrado!")
-						if hasattr(self.utils, "graph"):
-							self.utils.getImageMap(self.utils.graph,experimentoAtivo.parametros.objetivoX, experimentoAtivo.parametros.objetivoY, 4, 3)
-							print(self.utils.path)
-							self.loadPath()
+	# Funcao principal para rodar os experimentos do site
+	def runExperimento(self, frame, graph, ev3) :
 
-			elif(self.utils.trajetoria == True and self.running == True):
-				self.runRobot(ev3, graph,frame)
-				if(self.db.getRodarExperimentoStatus() == 0):
-					self.robotController.stopRobot()
+		# Verifica se existe sinal para rodar os experimentos
+		# 1 = Rodar | 0 = Parar
+		self.runStatus = self.db.getRodarExperimentoStatus()
 
-			################ FIM DA PARTE DE CONTROLE DO LOOP
-			#
-			#
-			#
-			#
+		# Busca a sessao atual
+		self.sessaoAtiva = self.sessaoService.getSessaoAtiva()
+		
+		# Verifica se o robo nao esta rodando e existe pedido para rodar
+		if (self.running == False and self.runStatus == 1):
+			# Verifica se existe sessao ativa
+				if(self.sessaoAtiva is not None):
+					# Existe sessao ativa, procura experimento ativo
+					self.experimentoAtivo = self.db.getExperimentoAtivo(self.sessaoAtiva.id)
+					if(self.experimentoAtivo is not None):
+						# Configura experimento e manda rodar, com base no experimento
+						self.configurarExperimento()
+					else:
+						# Para o pedido de rodar, nao existe experimento ativo
+						self.db.setRodarExperimentoStatus(0)
+				else:
+					# Nao existe sessao ativa, parar sinal de rodar
+					self.db.setRodarExperimentoStatus(0)
+		# Verifica se o robo esta rodando e nao existe pedido para rodar
+		elif (self.running == True and self.runStatus == 0):
+			# Para de executar o robo
+			self.running = False
+			self.robotController.stopRobot()
+		# Verifica se o robo esta rodando e existe pedido para rodar
+		elif (self.running == True and self.runStatus == 1):
+			# Procede com a execucao do experimento
+			self.runRobot(ev3, graph,frame)
+
+	# Configura os experimentos para rodar	
+	def configurarExperimento(self):	
+
+		# Constantes para configuracao
+		ESCALA = 4
+		ESCALA_FATOR_SEGURANCA = 3
+
+		# Verifica se o experimento e de apontar
+		if (int(self.experimentoAtivo.codExperimento) == 1) :
+			self.experimentoAtivo.parametros = self.db.getParametrosExperimentoApontar(self.experimentoAtivo.codigo)
+			self.utils.getImageMap(
+				self.utils.graph,
+				self.experimentoAtivo.parametros.objetivoX, 
+				self.experimentoAtivo.parametros.objetivoY,
+				ESCALA,
+				ESCALA_FATOR_SEGURANCA,
+				self.experimentoAtivo)
+			self.loadPath()
+			# Inicializa o robo
+			self.running = True
+				
+
+		
+	# Loop principal
+	def mainLoop(self, videoSource):
+		self.pts = deque(maxlen=self.args["buffer"])
+
+		while True:		
+			(frame, graph, ev3) = self.processaImagemCamera(videoSource)
+		
+			# Validacao para ver se a imagem esta carregada
+			if hasattr(self.utils, "graph"): 
+				self.runExperimento(frame, graph, ev3)
 
 			# Finaliza o programa caso aperte a tecla q
 			if self.utils.printImage(frame, graph) == ord("q"):
@@ -298,7 +331,6 @@ class Main():
 
 			# Transforma o frame em .jpg para fazer o stream
 			self.generateWebFrame(frame, graph)
-
 
 if __name__ == '__main__':
 	rospy.init_node('ev3_controlador_py', anonymous=True)

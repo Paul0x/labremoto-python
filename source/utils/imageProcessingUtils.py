@@ -48,7 +48,7 @@ class ImageProcessingUtils():
 			print("Cor HSV nas coord. [ %s, %s ]" % (x,y))
 			print(color)
 		if event == cv2.EVENT_LBUTTONDOWN:
-			self.getImageMap(self.graph,x, y, 16, 3)
+			self.getImageMap(self.graph,x, y, 16, 3, None)
 
 	# Mostra a Imagem na Tela
 	def printImage(self, frame, graph):
@@ -111,7 +111,7 @@ class ImageProcessingUtils():
 		return map, mapImg
 
 	# Gera o mapa utilizado pelo pathplanning
-	def getImageMap(self, img, goalX, goalY, scale, safeScale):
+	def getImageMap(self, img, goalX, goalY, scale, safeScale, experimento):
 		x = 1280/scale
 		y = 720/scale
 		goalX = int(goalX/scale)

@@ -33,6 +33,10 @@ class Database():
         cursor = self.conn.cursor()
         cursor.execute(queryString)
         self.conn.commit()
+        queryString = "UPDATE sessao_experimento SET ativo = 0 WHERE ativo = 1"
+        cursor = self.conn.cursor()
+        cursor.execute(queryString)
+        self.conn.commit()
 
     def getExperimentosSessaoAtiva(self, codSessaoAtiva):
         queryString = "SELECT codigo, cod_sessao, cod_experimento, dt_inicio, ativo FROM sessao_experimento WHERE cod_sessao = %s"
@@ -94,10 +98,10 @@ class Database():
         results = cursor.fetchone()
         return int(results[0])
 
-    def getPararExperimentoStatus(self):
-        queryString = "SELECT valor FROM configuracoes WHERE id = 2"
+    def setRodarExperimentoStatus(self, status):
+        queryString = "UPDATE configuracoes SET valor = '" + str(status) + "' WHERE id = 1"
         cursor = self.conn.cursor()
         cursor.execute(queryString)
-        results = cursor.fetchone()
-        return int(results[0])
+        self.conn.commit()
+
     

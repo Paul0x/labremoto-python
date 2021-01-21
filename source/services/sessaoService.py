@@ -26,6 +26,9 @@ class SessaoService:
             now = datetime.now()
             if now > self.sessaoAtiva.dtFim:
                 self.db.removeSessaoAtiva()
+                return False
+            return True
+        return False
 
     # Pega a sessao ativa do laboratorio
     def getSessaoAtiva(self):
@@ -33,10 +36,16 @@ class SessaoService:
         sessoes = self.db.getSessaoAtiva()
         if len(sessoes) != 1:
             print("Nao foi encontrada sessao ativa no momento")
-            return
+            return None
         self.sessaoAtiva = Sessao(sessoes[0])
-        print("Sessao ativa carregada")
-        return self.sessaoAtiva
+
+        # Verifica timeout da sessao
+        if(self.checkSessaoTimeout() == True):
+            print("Sessao ativa carregada")
+            return self.sessaoAtiva
+        else:
+            print("Sessao ativa terminada por timeout")
+            return None
 
     # Pega os experimentos da sessao ativa
     def getExperimentosSessaoAtiva(self):
