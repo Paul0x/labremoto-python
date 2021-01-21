@@ -283,6 +283,8 @@ class Main():
 
 			elif(self.utils.trajetoria == True and self.running == True):
 				self.runRobot(ev3, graph,frame)
+				if(self.db.getRodarExperimentoStatus() == 0):
+					self.robotController.stopRobot()
 
 			################ FIM DA PARTE DE CONTROLE DO LOOP
 			#

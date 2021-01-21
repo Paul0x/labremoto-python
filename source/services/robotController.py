@@ -61,19 +61,14 @@ class RobotController():
         pub = rospy.Publisher('cmd_vel', Twist, queue_size = 1) 
 
         # Variaveis do controlador
-        #kP = 0.005
-        #kPa = 0.656
-        #kI = 0.001
-        #kD = 0.002 
-        #vMax = 0.36    
-        kP = 5
-        kPa = 6
-        kI = 7
-        kD = 9
-        vMax = 12
-
+        kP = 0.005
+        kPa = 0.656
+        kI = 0.001
+        kD = 0.002 
+        vMax = 0.36
+        
         # Erro permitido pelo controlador
-        err = 30
+        err = 80
 
         # Calcula distancia e diferenca do angulo entre o robo e o objetivo
         rho = math.sqrt((goal.x - pose.x)**2 + (goal.y - pose.y)**2)
