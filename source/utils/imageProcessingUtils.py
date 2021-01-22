@@ -1,8 +1,12 @@
 ##############################################################################
-#   Reconhecimento e Processamento de Imagens @ Trabalho de Robotica 2019.1
-#   Biblioteca de Funcoes para Processamento de Imagens
+#   Laboratorio Remoto de Robotica Movel - TCC
+#   Arquivo de Processamento de Imagens
 ##############################################################################
 #   Author: Paulo Felipe - paulof (at) ufop.edu.br
+#
+##############################################################################
+#  Contem as funcoes relacionadas ao processamento basico de imagens do programa
+##############################################################################
 from collections import deque
 from imutils.video import VideoStream
 from math import atan2, cos, sin, sqrt, pi

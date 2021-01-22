@@ -6,8 +6,7 @@
 #
 ##############################################################################
 #  Contem o loop principal para controlar o robo.
-#
-#
+##############################################################################
 from collections import deque
 import os
 from math import atan2, acos, cos, sin, sqrt, pi
@@ -126,11 +125,13 @@ class Main():
 		return graph
 
 
+	# Carrega o caminho realizado pelo robo e inicializa o PID
 	def loadPath(self):
 		path = self.utils.path
 		self.goalX = self.utils.goal[0] * self.utils.mapScale
 		self.goalY = self.utils.goal[1] * self.utils.mapScale
 		self.path = self.buildRealPath(path, self.utils.mapScale)
+		
 		self.robotController.initPid()
 
 		# O primeiro goal e o primeiro item do path
@@ -139,6 +140,8 @@ class Main():
 		self.currentGoal.y = self.path[0][1]
 		self.path.pop(0)
 
+	# Constroi o caminho real que o robo realizara,
+	# ou seja, diminui os pontos de objetivo que serao enviados ao controlador PID
 	def buildRealPath(self, path, scale):
 		pathLen = len(path)
 		if (pathLen > 10):
@@ -149,8 +152,6 @@ class Main():
 		newPath = []
 		for i in range(0, len(path), newPathLen):
 			newPath.append((path[i][0]*scale, path[i][1]*scale))
-		#print('Caminho Real')
-		#print(newPath)
 		return newPath
 
 

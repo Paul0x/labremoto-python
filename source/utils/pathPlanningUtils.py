@@ -1,12 +1,17 @@
 ##############################################################################
-#   Reconhecimento e Processamento de Imagens @ Trabalho de Robotica 2019.1
-#   Biblioteca de PathPlanning
+#   Laboratorio Remoto de Robotica Movel - TCC
+#   Arquivo de PathPlanning
 ##############################################################################
 #   Author: Paulo Felipe - paulof (at) ufop.edu.br
+#
+##############################################################################
+#  Contem os algoritmos de busca de caminho
+#  - A* (Implementado)
+#  - RTS (Nao Implementado)
+##############################################################################
 
+# Classe do no - astar
 class Node():
-    """A node class for A* Pathfinding"""
-
     def __init__(self, parent=None, position=None):
         self.parent = parent
         self.position = position
@@ -19,6 +24,7 @@ class Node():
         return self.position == other.position
 
 
+# Funcao do A*
 def astar(maze, start, end, maxCounter):
     print("Buscando melhor caminho atraves do aStar")
     # Inicializa os nos iniciais e finais
@@ -83,26 +89,3 @@ def astar(maze, start, end, maxCounter):
                 if child == open_node and child.g > open_node.g:
                     continue
             open_list.append(child)
-
-def main():
-
-	maze = [[0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-	        [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
-
-	start = (0, 0)
-	end = (7, 6)
-
-	path = astar(maze, start, end)
-	print(path)
-
-
-if __name__ == '__main__':
-	main()
