@@ -25,13 +25,13 @@ class ImageProcessingUtils():
 		frame = frame[1]
 		return frame
 
-	# Transforma o frame para HSV
+	# Transforma o frame de RGB para HSV
 	def frameToHsv(self, frame):
 		blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 		hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 		return hsv
 
-	# Aplica a mascara pre-definida
+	# Aplica a mascara pre-definida para mostrar os objetos
 	def applyMaskToFrame(self, hsv, lowerBound, upperBound):
 		mask = cv2.inRange(hsv, lowerBound, upperBound)
 		mask = cv2.erode(mask, None, iterations=2)
@@ -65,6 +65,7 @@ class ImageProcessingUtils():
 		return cv2.waitKey(1) & 0xFF
 
 	# Adiciona o espaco de seguranca no mapa
+	# Esse espaco e pre-definido para evitar que o robo colida com os obstaculos
 	def checkRobotSafeRange(self, map, mapImg, x, y, safeScale):
 		for i in range(x-1):
 			for j in range(y-1):
@@ -154,7 +155,6 @@ class ImageProcessingUtils():
 			M = cv2.moments(c)
 			center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 			if radius > 4:
-				#cv2.circle(frame, (int(x), int(y)), 10, (0, 0, 250), -1)
 				return (x,y)
 			return (-1, -1)
 		return (-1, -1)
@@ -181,47 +181,13 @@ class ImageProcessingUtils():
 			cv2.fillPoly(graph, pts =[c], color=(0,255,0))
 			#self.getOrientation(c, frame)
 
-	# Nao faz nada
-	def getOrientationOld(self, contour, frame):
-		sz = len(contour)
-		data_contour = np.empty((sz, 2), dtype=np.float64)
-		for i in range(data_contour.shape[0]):
-			data_contour[i,0] = contour[i,0,0]
-			data_contour[i,1] = contour[i,0,1]
-		# Perform PCA analysis
-		mean = np.empty((0))
-		mean, eigenvectors, eigenvalues = cv2.PCACompute2(data_contour, mean)
-		# Store the center of the object
-		cntr = (int(mean[0,0]), int(mean[0,1]))
-		
-		
-		cv2.circle(frame, cntr, 3, (255, 0, 255), 2)
-		p1 = (cntr[0] + 0.02 * eigenvectors[0,0] * eigenvalues[0,0], cntr[1] + 0.02 * eigenvectors[0,1] * eigenvalues[0,0])
-		p2 = (cntr[0] - 0.02 * eigenvectors[1,0] * eigenvalues[1,0], cntr[1] - 0.02 * eigenvectors[1,1] * eigenvalues[1,0])
-		drawAxis(frame, cntr, p1, (0, 255, 0), 1)
-		drawAxis(frame, cntr, p2, (255, 255, 0), 5)
-		angle = atan2(eigenvectors[0,1], eigenvectors[0,0]) # orientation in radians
-		if(angle>0):
-			radians = angle
-		else:
-			radians = 2*pi + angle
-		return radians
 
+	# Imprime a seta de direcao no grafico principal
 	def printRobot(self, ev3, frame, graph, scale):
 		cv2.circle(graph, (int(ev3.center.x), int(ev3.center.y)), 6*scale, (0, 0, 250), -1)
 		cv2.arrowedLine(graph, (int(ev3.center.x), int(ev3.center.y)), (int(ev3.front.x), int(ev3.front.y)), (255,0,0), 3, cv2.LINE_AA)
 		cv2.arrowedLine(frame, (int(ev3.center.x), int(ev3.center.y)), (int(ev3.front.x), int(ev3.front.y)), (255,0,0), 3, cv2.LINE_AA)
-		
-	def drawGrid(self, img, line_color=(0, 0, 0), thickness=1, type_=cv2.LINE_AA, pxstep=8):
-		x = pxstep
-		y = pxstep
-		while x < img.shape[1]:
-			cv2.line(img, (x, 0), (x, img.shape[0]), color=line_color, lineType=type_, thickness=thickness)
-			x += pxstep
-		while y < img.shape[0]:
-			cv2.line(img, (0, y), (img.shape[1], y), color=line_color, lineType=type_, thickness=thickness)
-			y += pxstep
-	
+			
 	def init(self):
 		self.trajetoria = False
 		self.updateTrajetoria = False
