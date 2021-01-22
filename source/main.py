@@ -117,8 +117,8 @@ class Main():
 			angle = pi + (pi - angle)
 		return angle
 	
+	# Cria a imagem em formato de array numpy
 	def createRawImage(self):
-		# Definicao do grafico de trajetoria
 		gWidth = 1280
 		gHeight = 720
 		graph = np.ones((gHeight,gWidth,3), np.uint8)*255
@@ -298,7 +298,6 @@ class Main():
 
 	# Configura os experimentos para rodar	
 	def configurarExperimento(self):	
-
 		# Constantes para configuracao
 		ESCALA = 4
 		ESCALA_FATOR_SEGURANCA = 3
@@ -317,8 +316,6 @@ class Main():
 			# Inicializa o robo
 			self.running = True
 				
-
-		
 	# Loop principal
 	def mainLoop(self, videoSource):
 		self.pts = deque(maxlen=self.args["buffer"])
