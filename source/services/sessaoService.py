@@ -32,7 +32,7 @@ class SessaoService:
 
     # Pega a sessao ativa do laboratorio
     def getSessaoAtiva(self):
-        print("Carregando sessao ativa atual")
+        #print("Carregando sessao ativa atual")
         sessoes = self.db.getSessaoAtiva()
         if len(sessoes) != 1:
             print("Nao foi encontrada sessao ativa no momento")
@@ -41,7 +41,7 @@ class SessaoService:
 
         # Verifica timeout da sessao
         if(self.checkSessaoTimeout() == True):
-            print("Sessao ativa carregada")
+         #   print("Sessao ativa carregada")
             return self.sessaoAtiva
         else:
             print("Sessao ativa terminada por timeout")

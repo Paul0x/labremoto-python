@@ -176,8 +176,6 @@ class Main():
 		for point in self.path:
 			cv2.circle(frame, (int(point[0]), int(point[1])), 2, (0, 0, 0), -1)
 		
-		# Imprime arquivo JSON
-		self.generateWebEv3Data()
 
 	#
 	# Funcao para gerar uma imagem jpg - utilizada para o servidor web
@@ -198,16 +196,22 @@ class Main():
 	#	Geracao do arquivo JSON para consumo do servidor WEB
 	#
 	def generateWebEv3Data(self):
+		
 		data = {}
 		if self.ev3telemetry == ():
-			return
-		print(self.ev3telemetry)
-		data['currentPosX'] = self.ev3telemetry[0]
-		data['currentPosY'] = self.ev3telemetry[1]
-		data['goalPosX'] = self.ev3telemetry[2]
-		data['goalPosY'] = self.ev3telemetry[3]
-		data['linearVel'] = self.ev3telemetry[4]
-		data['angularVel'] = self.ev3telemetry[5]
+			data['currentPosX'] = 0
+			data['currentPosY'] = 0
+			data['goalPosX'] = 0
+			data['goalPosY'] = 0
+			data['linearVel'] = 0
+			data['angularVel'] = 0
+		else:
+			data['currentPosX'] = self.ev3telemetry[0]
+			data['currentPosY'] = self.ev3telemetry[1]
+			data['goalPosX'] = self.ev3telemetry[2]
+			data['goalPosY'] = self.ev3telemetry[3]
+			data['linearVel'] = self.ev3telemetry[4]
+			data['angularVel'] = self.ev3telemetry[5]
 		if (self.running == True):
 			data['running'] = 1
 		else:
@@ -331,6 +335,9 @@ class Main():
 
 			# Transforma o frame em .jpg para fazer o stream
 			self.generateWebFrame(frame, graph)
+
+			# Imprime arquivo JSON
+			self.generateWebEv3Data()
 
 if __name__ == '__main__':
 	rospy.init_node('ev3_controlador_py', anonymous=True)
