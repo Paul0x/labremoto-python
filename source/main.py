@@ -162,6 +162,7 @@ class Main():
 		pose.y = ev3.center.y
 		pidResp, ev3telemetry = self.robotController.pidRun(graph, self.currentGoal, pose, ev3, False)
 		self.ev3telemetry = ev3telemetry
+		self.saveExperimentoResults()
 		if(pidResp == True):
 			if(len(self.path) == 0):
 				self.running = False
@@ -315,14 +316,24 @@ class Main():
 			self.loadPath()
 			# Inicializa o robo
 			self.running = True
-				
+
+	# Salva os resultados do experimento
+	#def saveExperimentoResults(self):
+	#	# Pega os resultados da telemetria e do experimento atual
+		# Salva no banco de dados 
+
+		
+	###########################################################				
 	# Loop principal
+	#
+	#
+	###########################################################
 	def mainLoop(self, videoSource):
 		self.pts = deque(maxlen=self.args["buffer"])
 
-		while True:		
+		while True:	
 			(frame, graph, ev3) = self.processaImagemCamera(videoSource)
-		
+
 			# Validacao para ver se a imagem esta carregada
 			if hasattr(self.utils, "graph"): 
 				self.runExperimento(frame, graph, ev3)
