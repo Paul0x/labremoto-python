@@ -35,7 +35,7 @@ class SessaoService:
         #print("Carregando sessao ativa atual")
         sessoes = self.db.getSessaoAtiva()
         if len(sessoes) != 1:
-            print("Nao foi encontrada sessao ativa no momento")
+            print("Nao foi encontrada sessao ativa no momento " + str(len(sessoes)))
             return None
         self.sessaoAtiva = Sessao(sessoes[0])
 

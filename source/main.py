@@ -9,6 +9,7 @@
 ##############################################################################
 from collections import deque
 import os
+import types
 from math import atan2, acos, cos, sin, sqrt, pi
 from imutils.video import VideoStream
 from services.robotController import RobotController
@@ -18,7 +19,7 @@ import numpy as np
 import argparse
 from utils.imageProcessingUtils import ImageProcessingUtils
 from entities.ev3 import Ev3, Point
-from entities.experimento import SessaoExperimento, SessaoExperimentoApontarParametros
+from entities.experimento import SessaoExperimento, SessaoExperimentoApontarParametros, ExperimentoData
 from services.database import Database
 import cv2
 import io
@@ -318,9 +319,14 @@ class Main():
 			self.running = True
 
 	# Salva os resultados do experimento
-	#def saveExperimentoResults(self):
-	#	# Pega os resultados da telemetria e do experimento atual
-		# Salva no banco de dados 
+	def saveExperimentoResults(self):
+		# Pega os resultados da telemetria e do experimento atual
+		# Salva no banco de dados
+		if (self.ev3telemetry == ()):
+			return
+		data = ExperimentoData()
+		data.starttime = datetime.now()
+		self.db.setExperimentoResults(self.experimentoAtivo, self.ev3telemetry, data)
 
 		
 	###########################################################				

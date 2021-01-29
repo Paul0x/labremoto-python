@@ -22,3 +22,6 @@ class SessaoExperimentoApontarParametros():
                 self.tamanhoMapaBusca = 0
                 self.tamanhoAreaSeguranca = 0
                 self.dtCriacao = datetime.now()
+
+class ExperimentoData():
+        pass
