@@ -145,7 +145,7 @@ class ImageProcessingUtils():
 			self.updateTrajetoria = True
 			mapImg = cv2.resize(mapImg,(1280, 720))
 			#cv2.imshow("Mapeamento", mapImg)
-		return 1
+		return mapImg
 
 	# Reconhecimento dos pontos do objeto
 	def recognizeObject(self, contours, frame, objLabel):

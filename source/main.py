@@ -209,6 +209,17 @@ class Main():
 		file = open("static/imgGraph.jpg", "wb")
 		file.write(frameImg)
 
+		if hasattr(self, "trajeMap"):
+			ret, buffer = cv2.imencode('.jpg', self.trajeMap)
+			frameImg = buffer.tobytes()
+			file = open("static/imgTraje.jpg", "wb")
+			file.write(frameImg)
+		else:
+			ret, buffer = cv2.imencode('.jpg', graph)
+			frameImg = buffer.tobytes()
+			file = open("static/imgTraje.jpg", "wb")
+			file.write(frameImg)
+
 	#
 	#	Geracao do arquivo JSON para consumo do servidor WEB
 	#
@@ -332,7 +343,7 @@ class Main():
 		# Verifica se o experimento e de apontar
 		if (int(self.experimentoAtivo.codExperimento) == 1) :
 			self.experimentoAtivo.parametros = self.db.getParametrosExperimentoApontar(self.experimentoAtivo.codigo)
-			self.utils.getImageMap(
+			self.trajeMap = self.utils.getImageMap(
 				self.utils.graph,
 				self.experimentoAtivo.parametros.objetivoX, 
 				self.experimentoAtivo.parametros.objetivoY,
