@@ -133,8 +133,6 @@ class Main():
 		self.goalX = self.utils.goal[0] * self.utils.mapScale
 		self.goalY = self.utils.goal[1] * self.utils.mapScale
 		self.path = self.buildRealPath(path, self.utils.mapScale)
-		
-		self.robotController.initPid()
 
 		# O primeiro goal e o primeiro item do path
 		self.currentGoal = Point()
@@ -159,27 +157,42 @@ class Main():
 
 	# Funcao para fazer o robo funcionar de fato
 	def runRobot(self, ev3, graph, frame):
-		pose = Point()
-		pose.x = ev3.center.x
-		pose.y = ev3.center.y
-		pidResp, ev3telemetry = self.robotController.pidRun(graph, self.currentGoal, pose, ev3, False, self.experimentoAtivo)
-		self.ev3telemetry = ev3telemetry
-		self.saveExperimentoResults()
-		if(pidResp == True):
-			if(len(self.path) == 0):
-				self.running = False
-				self.robotController.stopRobot()
-				self.utils.trajetoria = False
-			else:
-				self.currentGoal = Point()
-				self.currentGoal.x = self.path[0][0]
-				self.currentGoal.y = self.path[0][1]
-				self.path.pop(0)
+		try:
+			pose = Point()
+			pose.x = ev3.center.x
+			pose.y = ev3.center.y
+			pidResp, ev3telemetry = self.robotController.pidRun(graph, self.currentGoal, pose, ev3, False, self.experimentoAtivo)
+			self.ev3telemetry = ev3telemetry
+			self.saveExperimentoResults()
+			if(pidResp == True):
+				if(len(self.path) == 0):
+					self.running = False
+					self.robotController.stopRobot()
+					self.utils.trajetoria = False
+				else:
+					self.currentGoal = Point()
+					self.currentGoal.x = self.path[0][0]
+					self.currentGoal.y = self.path[0][1]
+					self.path.pop(0)
 
-		# Desenha os objetivos no mapa		
-		for point in self.path:
-			cv2.circle(frame, (int(point[0]), int(point[1])), 2, (0, 0, 0), -1)
-		
+
+			# Desenha os objetivos no mapa		
+			for point in self.path:
+				cv2.circle(frame, (int(point[0]), int(point[1])), 2, (0, 0, 0), -1)
+		except:
+			self.robotRecovery()
+
+	#
+	#	Funcao para recuperar o robo
+	#
+	def robotRecovery(self):
+		# Finaliza o experimento e para a execucao
+		print("Iniciando recuperacao do robo")
+		self.db.setRodarExperimentoStatus(0)
+		self.running = False
+		self.db.removeExperimentoAtivo()
+		self.generateWebEv3Data()
+
 
 	#
 	# Funcao para gerar uma imagem jpg - utilizada para o servidor web
@@ -328,7 +341,6 @@ class Main():
 				self.experimentoAtivo)
 
 			# Configura as informacoes do resultado
-
 			self.experimentoData = ExperimentoData()
 			self.experimentoData.starttime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 			self.experimentoData.objetivoX = self.experimentoAtivo.parametros.objetivoX
@@ -337,6 +349,7 @@ class Main():
 			self.experimentoData.kd = self.experimentoAtivo.parametros.kd
 			self.experimentoData.ki = self.experimentoAtivo.parametros.ki
 			self.loadPath()
+			self.robotController.initPid()
 			# Inicializa o robo
 			self.running = True
 
@@ -386,7 +399,7 @@ class Main():
 
 				# Imprime arquivo JSON
 				self.generateWebEv3Data()
-		except:
+		except Exception as e:
 			# Garante que o robo vai parar
 			self.robotController.stopRobot()
 			self.running = False
@@ -398,6 +411,9 @@ class Main():
 			
 			# Aumenta a contagem de excecoes
 			self.errCounter = self.errCounter + 1
+
+			# Printa excecao
+			print(e)
 			# Tenta repetir o loop caso ocorra um erro, no maximo 100 vezes apos inicio da execucao
 			if(self.errCounter < 1):
 				self.mainLoop(videoSource)

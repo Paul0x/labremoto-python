@@ -39,6 +39,13 @@ class Database():
         cursor.execute(queryString)
         self.conn.commit()
 
+    def removeExperimentoAtivo(self):
+        queryString = "UPDATE sessao_experimento SET ativo = 0 WHERE ativo = 1"
+        cursor = self.conn.cursor()
+        cursor.execute(queryString)
+        self.conn.commit()
+
+
     def getExperimentosSessaoAtiva(self, codSessaoAtiva):
         queryString = "SELECT codigo, cod_sessao, cod_experimento, dt_inicio, ativo FROM sessao_experimento WHERE cod_sessao = %s"
         cursor = self.conn.cursor()

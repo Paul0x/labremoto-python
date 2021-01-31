@@ -18,6 +18,7 @@ import cv2
 from geometry_msgs.msg import Twist
 from entities.ev3 import Ev3, Point
 from nav_msgs.msg import Odometry
+from datetime import datetime, timedelta
 import sys, select, termios, tty
 
 class RobotController():
@@ -49,9 +50,15 @@ class RobotController():
     def initPid(self):
         self.lastAlpha = 0
         self.alphaSum = 0
+        self.startTime = datetime.now()
     
     # Roda o PID
     def pidRun(self, graph, goal, pose, ev3, lastFlag, experimento):
+
+        # Verifica se nao excedeu o tempo limite, caso tenha lanca uma excecao
+        if(datetime.now() > (self.startTime + timedelta(0,10))):
+            raise Exception("Tempo de execucao excedido")
+
         # Inicializa publisher para comandar a velocidade no ROS
         pub = rospy.Publisher('cmd_vel', Twist, queue_size = 1) 
 
