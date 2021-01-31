@@ -10,7 +10,8 @@
 #
 #
 
-from datetime import datetime, date, time
+from datetime import datetime, date
+import time
 from entities.sessao import Sessao
 class SessaoService:
 
@@ -35,7 +36,8 @@ class SessaoService:
         #print("Carregando sessao ativa atual")
         sessoes = self.db.getSessaoAtiva()
         if len(sessoes) != 1:
-            print("Nao foi encontrada sessao ativa no momento " + str(len(sessoes)))
+            print("Nao foi encontrada sessao ativa no momento " + str(len(sessoes)) + " dormindo por alguns segundos.")
+            time.sleep(5)
             return None
         self.sessaoAtiva = Sessao(sessoes[0])
 

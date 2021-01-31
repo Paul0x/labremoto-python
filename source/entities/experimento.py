@@ -24,4 +24,5 @@ class SessaoExperimentoApontarParametros():
                 self.dtCriacao = datetime.now()
 
 class ExperimentoData():
-        pass
+        def __init__(self):
+                self.starttime = 0

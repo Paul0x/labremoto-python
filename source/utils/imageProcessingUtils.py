@@ -58,10 +58,10 @@ class ImageProcessingUtils():
 	def printImage(self, frame, graph):
 		cv2.namedWindow("Robotica")
 		cv2.setMouseCallback("Robotica", self.cvEventHandler)
-		cv2.imshow("Trajetoria", graph)
+		#cv2.imshow("Trajetoria", graph)
 		self.frame = frame
 		self.graph = graph
-		cv2.imshow("Robotica", frame)
+		#cv2.imshow("Robotica", frame)
 		return cv2.waitKey(1) & 0xFF
 
 	# Adiciona o espaco de seguranca no mapa
@@ -132,7 +132,7 @@ class ImageProcessingUtils():
 		if(map[goalX, goalY] != 0):
 			print("Caminho obstruido")
 		else:
-			cv2.imshow("Mapeamento", mapImg)
+			#cv2.imshow("Mapeamento", mapImg)
 			path = astar(map, (int(self.ev3.front.x/scale),int(self.ev3.front.y/scale)), (goalX,goalY), 1200)
 			for coord in path:
 				cv2.line(mapImg,coord,coord,(255,0,0),1)
@@ -144,7 +144,7 @@ class ImageProcessingUtils():
 			self.mapScale = scale
 			self.updateTrajetoria = True
 			mapImg = cv2.resize(mapImg,(1280, 720))
-			cv2.imshow("Mapeamento", mapImg)
+			#cv2.imshow("Mapeamento", mapImg)
 		return 1
 
 	# Reconhecimento dos pontos do objeto

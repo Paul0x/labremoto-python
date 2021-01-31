@@ -51,16 +51,24 @@ class RobotController():
         self.alphaSum = 0
     
     # Roda o PID
-    def pidRun(self, graph, goal, pose, ev3, lastFlag):
+    def pidRun(self, graph, goal, pose, ev3, lastFlag, experimento):
         # Inicializa publisher para comandar a velocidade no ROS
         pub = rospy.Publisher('cmd_vel', Twist, queue_size = 1) 
 
         # Variaveis do controlador
-        kP = 0.005
-        kPa = 0.656
-        kI = 0.001
-        kD = 0.002 
-        vMax = 0.36
+        #kP = 0.005
+        #kPa = 0.656
+        #kI = 0.001
+        #kD = 0.002 
+        vMax = 2
+        kP = experimento.parametros.kp
+        kD = experimento.parametros.kd
+        kI = experimento.parametros.ki
+        kPa = experimento.parametros.kp * 70
+
+
+        # Seta as variaveis do experimento
+
         
         # Erro permitido pelo controlador
         err = 80
@@ -85,8 +93,8 @@ class RobotController():
         self.lastAlpha = alpha
 
         # Aplica velocidade no robo 
-        print("PosRobo (%s,%s) | Objetivo (%s,%s) | Vel Linear = %s | Vel Angular = %s" 
-        % (pose.x,pose.y,goal.x,goal.y,linearVelocity,angularVelocity))
+        #print("PosRobo (%s,%s) | Objetivo (%s,%s) | Vel Linear = %s | Vel Angular = %s" 
+        #% (pose.x,pose.y,goal.x,goal.y,linearVelocity,angularVelocity))
         
         twist = Twist()
         twist.linear.x = linearVelocity 

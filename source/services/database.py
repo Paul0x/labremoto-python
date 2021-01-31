@@ -2,7 +2,7 @@
 import mysql.connector
 from datetime import datetime, timedelta
 import json
-from entities.experimento import SessaoExperimento, SessaoExperimentoApontarParametros
+from entities.experimento import SessaoExperimento, SessaoExperimentoApontarParametros, ExperimentoData
 ##############################################################################
 #   Laboratorio Remoto de Robotica Movel - TCC
 #   Arquivo de conexao com o banco de dados
@@ -108,17 +108,20 @@ class Database():
     def setExperimentoResults(self, experimentoAtivo, telemetry, data):
         queryString = "INSERT INTO experimento_resultados (cod_sessao_experimento, "
         queryString += "pos_x, pos_y, linear_vel, angular_vel, experimento_starttime, data, "
-        queryString += "dt_criacao) VALUES ("
-        queryString += str(experimentoAtivo.codigo) + ","
-        queryString += str(telemetry[0]) + ","
-        queryString += str(telemetry[1]) + ","
-        queryString += str(telemetry[4]) + ","
-        queryString += str(telemetry[5]) + ","
-        queryString += "'" + data.starttime.strftime("%Y-%m-%d %H:%M:%S") + "',"
-        queryString += "'{}',"
-        queryString += "'" + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "')"
+        queryString += "dt_criacao) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+
+        queryData = (
+        experimentoAtivo.codigo,
+        telemetry[0],
+        telemetry[1],
+        telemetry[4],
+        telemetry[5],
+        data.starttime,
+        json.dumps(data.__dict__),
+        datetime.now())
+        
         cursor = self.conn.cursor()
-        cursor.execute(queryString)
+        cursor.execute(queryString, queryData)
         self.conn.commit()
 
     

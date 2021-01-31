@@ -42,6 +42,8 @@ class Main():
 			print now.strftime("%d/%m/%Y %H:%M")
 			print("======================================")
 			print("Inicializando...")
+			self.errCounter = 0
+			self.resultsCounter = 0
 			self.utils = ImageProcessingUtils()
 			self.utils.init()
 			self.robotController = RobotController()
@@ -52,7 +54,6 @@ class Main():
 			self.running = False
 			self.initDatabase()
 			self.sessaoService = SessaoService(self.db)
-			self.sessaoAtiva = self.sessaoService.getSessaoAtiva()
 			print("Inicializado com sucesso.\n\n")
 			self.mainLoop(videoSource)
 
@@ -161,7 +162,7 @@ class Main():
 		pose = Point()
 		pose.x = ev3.center.x
 		pose.y = ev3.center.y
-		pidResp, ev3telemetry = self.robotController.pidRun(graph, self.currentGoal, pose, ev3, False)
+		pidResp, ev3telemetry = self.robotController.pidRun(graph, self.currentGoal, pose, ev3, False, self.experimentoAtivo)
 		self.ev3telemetry = ev3telemetry
 		self.saveExperimentoResults()
 		if(pidResp == True):
@@ -199,26 +200,35 @@ class Main():
 	#	Geracao do arquivo JSON para consumo do servidor WEB
 	#
 	def generateWebEv3Data(self):
-		
 		data = {}
-		if self.ev3telemetry == ():
+		try: 
+			if self.ev3telemetry == () or self.running == False:
+				data['currentPosX'] = 0
+				data['currentPosY'] = 0
+				data['goalPosX'] = 0
+				data['goalPosY'] = 0
+				data['linearVel'] = 0
+				data['angularVel'] = 0
+			else:
+				data['currentPosX'] = self.ev3telemetry[0]
+				data['currentPosY'] = self.ev3telemetry[1]
+				data['goalPosX'] = self.ev3telemetry[2]
+				data['goalPosY'] = self.ev3telemetry[3]
+				data['linearVel'] = self.ev3telemetry[4]
+				data['angularVel'] = self.ev3telemetry[5]
+
+			if (self.running == True):
+				data['running'] = 1
+			else:
+				data['running'] = 0
+		except:
 			data['currentPosX'] = 0
 			data['currentPosY'] = 0
 			data['goalPosX'] = 0
 			data['goalPosY'] = 0
 			data['linearVel'] = 0
 			data['angularVel'] = 0
-		else:
-			data['currentPosX'] = self.ev3telemetry[0]
-			data['currentPosY'] = self.ev3telemetry[1]
-			data['goalPosX'] = self.ev3telemetry[2]
-			data['goalPosY'] = self.ev3telemetry[3]
-			data['linearVel'] = self.ev3telemetry[4]
-			data['angularVel'] = self.ev3telemetry[5]
-		if (self.running == True):
-			data['running'] = 1
-		else:
-			data['running'] = 0
+			data['running'] = 3
 		with open("static/ev3data.json", "w") as outputfile:
 			json.dump(data, outputfile)
 
@@ -288,11 +298,13 @@ class Main():
 				else:
 					# Nao existe sessao ativa, parar sinal de rodar
 					self.db.setRodarExperimentoStatus(0)
+
 		# Verifica se o robo esta rodando e nao existe pedido para rodar
 		elif (self.running == True and self.runStatus == 0):
 			# Para de executar o robo
 			self.running = False
 			self.robotController.stopRobot()
+
 		# Verifica se o robo esta rodando e existe pedido para rodar
 		elif (self.running == True and self.runStatus == 1):
 			# Procede com a execucao do experimento
@@ -314,45 +326,82 @@ class Main():
 				ESCALA,
 				ESCALA_FATOR_SEGURANCA,
 				self.experimentoAtivo)
+
+			# Configura as informacoes do resultado
+
+			self.experimentoData = ExperimentoData()
+			self.experimentoData.starttime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+			self.experimentoData.objetivoX = self.experimentoAtivo.parametros.objetivoX
+			self.experimentoData.objetivoY = self.experimentoAtivo.parametros.objetivoY
+			self.experimentoData.kp = self.experimentoAtivo.parametros.kp
+			self.experimentoData.kd = self.experimentoAtivo.parametros.kd
+			self.experimentoData.ki = self.experimentoAtivo.parametros.ki
 			self.loadPath()
 			# Inicializa o robo
 			self.running = True
 
 	# Salva os resultados do experimento
 	def saveExperimentoResults(self):
-		# Pega os resultados da telemetria e do experimento atual
-		# Salva no banco de dados
-		if (self.ev3telemetry == ()):
-			return
-		data = ExperimentoData()
-		data.starttime = datetime.now()
-		self.db.setExperimentoResults(self.experimentoAtivo, self.ev3telemetry, data)
 
-		
+		# Verifica a escala para salvar resultados
+		if (self.resultsCounter > 6):
+			# Pega os resultados da telemetria e do experimento atual
+			# Salva no banco de dados
+			if (self.ev3telemetry == ()):
+				return
+			try:
+				self.db.setExperimentoResults(self.experimentoAtivo, self.ev3telemetry, self.experimentoData)
+				self.resultsCounter = 0
+			except Exception as e:
+				print(e)
+				print("Excessao ao salvar resultados", sys.exc_info()[0], ".")
+		else:
+			self.resultsCounter = self.resultsCounter + 1
 	###########################################################				
 	# Loop principal
-	#
-	#
 	###########################################################
 	def mainLoop(self, videoSource):
-		self.pts = deque(maxlen=self.args["buffer"])
+		try:
+			self.pts = deque(maxlen=self.args["buffer"])
 
-		while True:	
-			(frame, graph, ev3) = self.processaImagemCamera(videoSource)
+			while True:	
+				(frame, graph, ev3) = self.processaImagemCamera(videoSource)
 
-			# Validacao para ver se a imagem esta carregada
-			if hasattr(self.utils, "graph"): 
-				self.runExperimento(frame, graph, ev3)
+				# Validacao para ver se a imagem esta carregada
+				if hasattr(self.utils, "graph"): 
+					self.runExperimento(frame, graph, ev3)
 
-			# Finaliza o programa caso aperte a tecla q
-			if self.utils.printImage(frame, graph) == ord("q"):
-				break
+				# Finaliza o programa caso aperte a tecla q
+				if self.utils.printImage(frame, graph) == ord("q"):
+					self.robotController.stopRobot()
+					self.running = False
+					self.db.setRodarExperimentoStatus(0)
+					#self.db.removeSessaoAtiva()
+					print("Finalizando programa")
+					print("Parando robo e encerrando sessao ativa")
+					break
 
-			# Transforma o frame em .jpg para fazer o stream
-			self.generateWebFrame(frame, graph)
+				# Transforma o frame em .jpg para fazer o stream
+				self.generateWebFrame(frame, graph)
 
-			# Imprime arquivo JSON
+				# Imprime arquivo JSON
+				self.generateWebEv3Data()
+		except:
+			# Garante que o robo vai parar
+			self.robotController.stopRobot()
+			self.running = False
+			self.utils.trajetoria = False
+			# Finaliza o pedido de execucao
+			self.db.setRodarExperimentoStatus(0)
+			# Garante o envio do status para o servidor web
 			self.generateWebEv3Data()
+			
+			# Aumenta a contagem de excecoes
+			self.errCounter = self.errCounter + 1
+			# Tenta repetir o loop caso ocorra um erro, no maximo 100 vezes apos inicio da execucao
+			if(self.errCounter < 1):
+				self.mainLoop(videoSource)
+
 
 if __name__ == '__main__':
 	rospy.init_node('ev3_controlador_py', anonymous=True)
